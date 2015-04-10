@@ -26,6 +26,7 @@ end
 function fillexponentialsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
   n = size(d)[1]
 
+  fill!(Σ, 0.0)
   for j = 1:n, i = 1:j
     if i == j
       Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
@@ -82,6 +83,7 @@ end
 function fillmaternsym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
   n = size(d)[1]
 
+  fill!(Σ, 0.0)
   for j = 1:n, i = 1:j
     if i == j
       Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
