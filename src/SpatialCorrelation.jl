@@ -86,7 +86,7 @@ function fillmaternsym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
     if i == j
       Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
     else
-      z = sqrt(2 * ν)* d[i, j] / ϕ
+      z = d[i, j] / ϕ
       Σ[i, j] = σ² * 2^(1 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
     end
   end
@@ -101,8 +101,8 @@ function fillmaternasym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
     if d_ij == 0
       Σ[i, j] = σ²
     else
-      z = sqrt(2 * ν)* d_ij / ϕ
-      Σ[i, j] = σ² / (gamma(ν) * 2^(ν - 1)) * (z)^ν * besselk(ν, z)
+      z = d[i, j] / ϕ
+      Σ[i, j] = σ² * 2^(1 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
     end
   end
 end
