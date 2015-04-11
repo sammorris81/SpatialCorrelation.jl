@@ -142,7 +142,7 @@ function fillsphericalsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
         Σ[i, j] = 0
       else
         z = d[i, j] / ϕ
-        Σ[i, j] = σ² * (1 - 1.5 * - z + 0.5 * z^3)
+        Σ[i, j] = σ² * (1 - 1.5 * z + 0.5 * z^3)
       end
     end
   end
@@ -159,7 +159,7 @@ function fillsphericalasym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
       Σ[i, j] = σ²
     elseif d_ij < ϕ
       z = d[i, j] / ϕ
-      Σ[i, j] = σ² * (1 - 1.5 * - z + 0.5 * z^3)
+      Σ[i, j] = σ² * (1 - 1.5 * z + 0.5 * z^3)
     else
       Σ[i, j] = 0
     end
