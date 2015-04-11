@@ -1,6 +1,6 @@
 # SpatialCorrelation
 
-Functions to generate commonly used spatial covariance matrices in Julia. Current functions include `exponential()`, `exponential!()`, `matern()`, and `matern!()`.
+Functions to generate commonly used spatial covariance matrices in Julia. Current functions include `exponential()`, `matern()`, and `spherical()`.
 
 ## Installation
 
@@ -26,3 +26,12 @@ To generate a Matérn covariance matrix, use the function `matern(d, σ², ν, �
 - `ϕ`: is the spatial range
 
 This function returns `Σ`, a Matérn covariance matrix. To modify `Σ` in place, use `matern!(Σ, d, σ², ν, ϕ)`.
+
+## Generate a spherical covariance matrix
+
+To generate a spherical covariance matrix, use the function `spherical(d, σ², ϕ)` where
+- `d`: is a matrix of distances
+- `σ²`: is the partial sill
+- `ϕ`: is the spatial range.
+
+This function will return `Σ`, a spherical covariance matrix. To modify `Σ` in place, use `spherical!(Σ, d, σ², ϕ)`.
