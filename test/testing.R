@@ -4,7 +4,7 @@ library(fields)
 library(SpatialTools)
 
 ns <- 300
-s <- cbind(1:ns, 1:ns)
+s <- cbind(seq(1, 10, length=ns), seq(1, 10, length=ns))
 d <- rdist(s)
 diag(d) <- 0
 rho <- 2
@@ -27,3 +27,5 @@ for (i in 1:500) {
 toc <- proc.time()[3]
 toc - tic
 
+simple.cov.sp(D=d, sp.type="spherical", sp.par=c(sigma.sq, rho),
+              error.var=0, finescale.var=0)

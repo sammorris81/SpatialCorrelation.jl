@@ -2,16 +2,16 @@ using SpatialCorrelation
 using Distances
 
 ns = 300
-s = hcat(linspace(1, ns, ns), linspace(1, ns, ns))
+s = hcat(linspace(1, 10, ns), linspace(1, 10, ns))
 d = fill(0.0, ns, ns)
 for j = 1:ns, i = 1:ns
   d[i, j] = Distances.euclidean(vec(s[i, :]), vec(s[j, :]))
 end
 
 σ² = 4
-ϕ = 2
+ϕ = 3
 Σ = exponential(d, σ², ϕ)
-ϕ = 1
+ϕ = 5
 exponential!(Σ, d, σ², ϕ)
 
 ν = 0.7
