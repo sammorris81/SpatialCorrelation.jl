@@ -20,11 +20,13 @@ exponential!(Σ, d, σ², ϕ)
 ν = 0.6
 matern!(Σ, d, σ², ν, ϕ)
 
+Σ = spherical(d, σ², ϕ)
+spherical!(Σ, d, σ², ϕ)
+
+
 @time for i = 1:500
   Σ = exponential(d, σ², ϕ)
 end
-
-
 
 @time for i = 1:500
   exponential!(Σ, d, σ², ϕ)

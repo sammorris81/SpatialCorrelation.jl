@@ -124,7 +124,7 @@ end # matern
 function spherical(d::Matrix, σ²::Real, ϕ::Real)
   nrows, ncols = size(d)
   Σ = fill(0.0, nrows, ncols)
-  sphericall!(Σ, d, σ², ϕ)
+  spherical!(Σ, d, σ², ϕ)
 
   return Σ
 end
