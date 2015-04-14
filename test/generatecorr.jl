@@ -1,6 +1,8 @@
 using SpatialCorrelation
 using Distances
 
+# blas_set_num_threads(1)
+
 ns = 300
 s = hcat(linspace(1, 10, ns), linspace(1, 10, ns))
 d = fill(0.0, ns, ns)
@@ -23,7 +25,6 @@ matern!(Σ, d, σ², ν, ϕ)
 Σ = spherical(d, σ², ϕ)
 spherical!(Σ, d, σ², ϕ)
 
-
 @time for i = 1:500
   Σ = exponential(d, σ², ϕ)
 end
@@ -31,9 +32,11 @@ end
 @time for i = 1:500
   exponential!(Σ, d, σ², ϕ)
 end
-# julia exponential: 2.4719 seconds for 500 iterations
-# julia exponential!: 2.1541 seconds for 500 iterations
-# R: 1.9276 seconds for 500 iterations
+
+# Macbook Air, 2013
+# julia exponential: 2.187 seconds for 500 iterations
+# julia exponential!: 1.909 seconds for 500 iterations
+# R: 2.124 seconds for 500 iterations
 
 @time for i = 1:500
   Σ = matern(d, σ², ν, ϕ)
@@ -43,8 +46,9 @@ end
   matern!(Σ, d, σ², ν, ϕ)
 end
 
-# julia matern: 19.9736 seconds for 500 iterations
-# julia matern!: 19.5991 seconds for 500 iterations
-# R: 20.18 seconds for 500 iterations
+# Macbook Air, 2013
+# julia matern: 29.447 seconds for 500 iterations
+# julia matern!: 28.658 seconds for 500 iterations
+# R: 35.892 seconds for 500 iterations
 
 
