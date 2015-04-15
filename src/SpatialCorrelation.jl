@@ -2,6 +2,7 @@ module SpatialCorrelation
 
 export exponential!, exponential, matern!, matern, spherical!, spherical
 import Base.LinAlg.BLAS.gemm!
+import Base.LinAlg.BLAS.gemm
 
 # d: matrix of distances
 # σ²: partial sill
@@ -27,28 +28,36 @@ function fillexponentialsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
   n = size(d)[1]
 
   fill!(Σ, 0.0)
-  for j = 1:n, i = 1:j
-    if i == j
-      Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
-    else
-      Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
+  for j = 1:n
+    for i = 1:j
+      if i == j
+        Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
+      else
+        Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
+      end
     end
   end
 
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
+  # copy is necessary so gemm! doesn't double some entries of
+  # upper triangular for large matrices
+  gemm!('T', 'N', 1.0, copy(Σ), eye(n), 1.0, Σ)
+
 end
 
 function fillexponentialasym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
   n = size(d)[1]
 
-  for j = 1:n, i = 1:n
-    d_ij = d[i, j]
-    if d_ij == 0
-      Σ[i, j] = σ²
-    else
-      Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
+  for j = 1:n
+    for i = 1:n
+      d_ij = d[i, j]
+      if d_ij == 0
+        Σ[i, j] = σ²
+      else
+        Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
+      end
     end
   end
+
 end
 
 # d: matrix of distances
@@ -65,7 +74,7 @@ function matern!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
     end
   else
     if ν == 0.5
-      fillexponentialsym!(Σ, d, σ², ϕ)
+      fillexponentialasym!(Σ, d, σ², ϕ)
     else
       fillmaternasym!(Σ, d, σ², ν, ϕ)
     end
@@ -92,7 +101,10 @@ function fillmaternsym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
       Σ[i, j] = σ² * 2^(1 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
     end
   end
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
+
+  # copy is necessary so gemm! doesn't double some entries of
+  # upper triangular for large matrices
+  gemm!('T', 'N', 1.0, copy(Σ), eye(n), 1.0, Σ)
 end
 
 function fillmaternasym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
@@ -147,7 +159,9 @@ function fillsphericalsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
     end
   end
 
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
+  # copy is necessary so gemm! doesn't double some entries of
+  # upper triangular for large matrices
+  gemm!('T', 'N', 1.0, copy(Σ), eye(n), 1.0, Σ)
 end
 
 function fillsphericalasym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
