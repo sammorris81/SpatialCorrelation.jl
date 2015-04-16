@@ -34,6 +34,7 @@ function fillexponentialsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ
   end
 end  # fillexponentialsym!
 
+
 function fillexponentialasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
   n, m = size(D)
   for j = 1:m, i = 1:n
@@ -89,6 +90,7 @@ function fillmaternsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T
   end
 end  # fillmaternsym!
 
+
 function fillmaternasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T, ν::T)
   n, m = size(D)
   for j = 1:m, i = 1:n
@@ -139,6 +141,7 @@ function fillsphericalsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²
     end
   end
 end  # fillsphericalsym!
+
 
 function fillsphericalasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
   n, m = size(D)

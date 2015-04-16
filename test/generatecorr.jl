@@ -2,8 +2,8 @@ using SpatialCorrelation
 using Distances
 
 # blas_set_num_threads(1)
-
 ns = 300
+
 s = hcat(linspace(1, 10, ns), linspace(1, 10, ns))
 d = fill(0.0, ns, ns)
 for j = 1:ns, i = 1:ns
