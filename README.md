@@ -1,4 +1,4 @@
-# SpatialCorrelation
+# SpatialCovariances.jl
 
 Functions to generate commonly used spatial covariance matrices in Julia. Current functions include `exponential()`, `matern()`, and `spherical()`.
 
