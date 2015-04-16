@@ -1,169 +1,158 @@
 module SpatialCorrelation
 
 export exponential!, exponential, matern!, matern, spherical!, spherical
-import Base.LinAlg.BLAS.gemm!
 
-# d: matrix of distances
+# Σ: covariance matrix
+# D: matrix of distances
 # σ²: partial sill
 # ϕ: spatial range
-# Σ: Matern covariance matrix
-function exponential!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  if issym(d)
-    fillexponentialsym!(Σ, d, σ², ϕ)
+function exponential!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  @assert σ² > 0.0
+  @assert ϕ > 0.0
+  if issym(D)
+    fillexponentialsym!(Σ, D, σ², ϕ)
   else
-    fillexponentialasym!(Σ, d, σ², ϕ)
+    fillexponentialasym!(Σ, D, σ², ϕ)
   end
-end # matern
+end # exponential!
 
-function exponential(d::Matrix, σ²::Real, ϕ::Real)
-  nrows, ncols = size(d)
-  Σ = fill(0.0, nrows, ncols)
-  exponential!(Σ, d, σ², ϕ)
-
+function exponential{T <: FloatingPoint}(D::Matrix{T}, σ²::T, ϕ::T)
+  Σ = fill(0.0, size(D))
+  exponential!(Σ, D, σ², ϕ)
   return Σ
-end
+end  # exponential
 
-function fillexponentialsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  n = size(d)[1]
-
-  fill!(Σ, 0.0)
+function fillexponentialsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  n = size(D, 1)
   for j = 1:n, i = 1:j
     if i == j
-      Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
-    else
-      Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
-    end
-  end
-
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
-end
-
-function fillexponentialasym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  n = size(d)[1]
-
-  for j = 1:n, i = 1:n
-    d_ij = d[i, j]
-    if d_ij == 0
       Σ[i, j] = σ²
     else
-      Σ[i, j] = σ² * exp(- d[i, j] / ϕ)
+      Σ[i, j] = σ² * exp(-D[i, j] / ϕ)
+      Σ[j, i] = Σ[i, j]
     end
   end
-end
+end  # fillexponentialsym!
 
-# d: matrix of distances
+function fillexponentialasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  n, m = size(D)
+  for j = 1:m, i = 1:n
+    d_ij = D[i, j]
+    if d_ij == 0.0
+      Σ[i, j] = σ²
+    else
+      Σ[i, j] = σ² * exp(-d_ij / ϕ)
+    end
+  end
+end  # fillexponentialasym!
+
+# Σ: covariance matrix
+# D: matrix of distances
 # σ²: partial sill
+# ϕ: spatial range
 # ν: smoothness (if 0.5, uses exponential functions)
-# ϕ: spatial range
-# Σ: Matern covariance matrix
-function matern!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
-  if issym(d)
+function matern!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T, ν::T)
+  @assert σ² > 0.0
+  @assert ϕ > 0.0
+  @assert ν > 0.0
+  if issym(D)
     if ν == 0.5
-      fillexponentialsym!(Σ, d, σ², ϕ)
+      fillexponentialsym!(Σ, D, σ², ϕ)
     else
-      fillmaternsym!(Σ, d, σ², ν, ϕ)
+      fillmaternsym!(Σ, D, σ², ϕ, ν)
     end
   else
     if ν == 0.5
-      fillexponentialsym!(Σ, d, σ², ϕ)
+      fillexponentialasym!(Σ, D, σ², ϕ)
     else
-      fillmaternasym!(Σ, d, σ², ν, ϕ)
+      fillmaternasym!(Σ, D, σ², ϕ, ν)
     end
   end
-end # matern
+end  # matern!
 
-function matern(d::Matrix, σ²::Real, ν::Real, ϕ::Real)
-  nrows, ncols = size(d)
-  Σ = fill(0.0, nrows, ncols)
-  matern!(Σ, d, σ², ν, ϕ)
-
+function matern{T <: FloatingPoint}(D::Matrix{T}, σ²::T, ϕ::T, ν::T)
+  Σ = fill(0.0, size(D))
+  matern!(Σ, D, σ², ϕ, ν)
   return Σ
-end
+end  # matern
 
-function fillmaternsym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
-  n = size(d)[1]
-
-  fill!(Σ, 0.0)
+function fillmaternsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T, ν::T)
+  n = size(D, 1)
   for j = 1:n, i = 1:j
     if i == j
-      Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
-    else
-      z = d[i, j] / ϕ
-      Σ[i, j] = σ² * 2^(1 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
-    end
-  end
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
-end
-
-function fillmaternasym!(Σ::Matrix, d::Matrix, σ²::Real, ν::Real, ϕ::Real)
-  n = size(d)[1]
-
-  for j = 1:n, i = 1:n
-    d_ij = d[i, j]
-    if d_ij == 0
       Σ[i, j] = σ²
     else
-      z = d[i, j] / ϕ
-      Σ[i, j] = σ² * 2^(1 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
+      z = D[i, j] / ϕ
+      Σ[i, j] = σ² * 2.0^(1.0 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
+      Σ[j, i] = Σ[i, j]
     end
   end
-end
+end  # fillmaternsym!
 
-# d: matrix of distances
+function fillmaternasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T, ν::T)
+  n, m = size(D)
+  for j = 1:m, i = 1:n
+    d_ij = D[i, j]
+    if d_ij == 0.0
+      Σ[i, j] = σ²
+    else
+      z = d_ij / ϕ
+      Σ[i, j] = σ² * 2.0^(1.0 - ν) / gamma(ν) * (z)^ν * besselk(ν, z)
+    end
+  end
+end  # fillmaternasym!
+
+# Σ: covariance matrix
+# D: matrix of distances
 # σ²: partial sill
 # ϕ: spatial range
-# Σ: Matern covariance matrix
-function spherical!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  if issym(d)
-    fillsphericalsym!(Σ, d, σ², ϕ)
+function spherical!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  @assert σ² > 0.0
+  @assert ϕ > 0.0
+  if issym(D)
+    fillsphericalsym!(Σ, D, σ², ϕ)
   else
-    fillsphericalasym!(Σ, d, σ², ϕ)
+    fillsphericalasym!(Σ, D, σ², ϕ)
   end
-end # matern
+end  # spherical!
 
-function spherical(d::Matrix, σ²::Real, ϕ::Real)
-  nrows, ncols = size(d)
-  Σ = fill(0.0, nrows, ncols)
-  spherical!(Σ, d, σ², ϕ)
-
+function spherical{T <: FloatingPoint}(D::Matrix{T}, σ²::T, ϕ::T)
+  Σ = fill(0.0, size(D))
+  spherical!(Σ, D, σ², ϕ)
   return Σ
-end
+end  # spherical
 
-function fillsphericalsym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  n = size(d)[1]
-
-  fill!(Σ, 0.0)
+function fillsphericalsym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  n = size(D, 1)
   for j = 1:n, i = 1:j
     if i == j
-      Σ[i, j] = 0.5 * σ²  # when we add using gemm!, we get the correct diagonal
+      Σ[i, j] = σ²
     else
-      d_ij = d[i, j]
-      if d_ij >= ϕ
-        Σ[i, j] = 0
+      d_ij = D[i, j]
+      if d_ij < ϕ
+        z = d_ij / ϕ
+        Σ[i, j] = σ² * (1.0 - 1.5 * z + 0.5 * z^3)
       else
-        z = d[i, j] / ϕ
-        Σ[i, j] = σ² * (1 - 1.5 * z + 0.5 * z^3)
+        Σ[i, j] = 0.0
       end
+      Σ[j, i] = Σ[i, j]
     end
   end
+end  # fillsphericalsym!
 
-  gemm!('T', 'N', 1.0, Σ, eye(n), 1.0, Σ)
-end
-
-function fillsphericalasym!(Σ::Matrix, d::Matrix, σ²::Real, ϕ::Real)
-  n = size(d)[1]
-
-  for j = 1:n, i = 1:n
-    d_ij = d[i, j]
-    if d_ij == 0
+function fillsphericalasym!{T <: FloatingPoint}(Σ::Matrix{T}, D::Matrix{T}, σ²::T, ϕ::T)
+  n, m = size(D)
+  for j = 1:m, i = 1:n
+    d_ij = D[i, j]
+    if d_ij == 0.0
       Σ[i, j] = σ²
     elseif d_ij < ϕ
-      z = d[i, j] / ϕ
-      Σ[i, j] = σ² * (1 - 1.5 * z + 0.5 * z^3)
+      z = d_ij / ϕ
+      Σ[i, j] = σ² * (1.0 - 1.5 * z + 0.5 * z^3)
     else
-      Σ[i, j] = 0
+      Σ[i, j] = 0.0
     end
   end
-end
+end  # fillsphericalasym!
 
 end # module
