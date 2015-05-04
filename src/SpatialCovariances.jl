@@ -1,4 +1,4 @@
-module SpatialCorrelation
+module SpatialCovariances
 
 export exponential!, exponential, matern!, matern, spherical!, spherical
 
